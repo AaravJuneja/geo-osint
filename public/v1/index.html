@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title></title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.7/build/pannellum.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <nav class="switcher">
+      <a href="https://dhundkaaledhund.netlify.app/v1" data-scene="v1">v1</a>
+      <a href="https://dhundkaaledhund.netlify.app/v2" data-scene="v2">v2</a>
+      <a href="https://dhundkaaledhund.netlify.app/v3" data-scene="v3">v3</a>
+    </nav>
+    <main class="viewer-shell">
+      <div id="panorama" class="panorama"></div>
+    </main>
+    <section class="guess-panel" id="guessPanel">
+      <button class="guess-toggle" id="guessToggle" type="button">guess</button>
+      <div class="guess-box">
+        <div id="guessMap" class="guess-map"></div>
+        <div class="guess-actions">
+          <button id="checkGuess" type="button">check</button>
+          <span id="guessResult"></span>
+        </div>
+      </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.7/build/pannellum.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/assets/app.js" type="module"></script>
+  </body>
+</html>
