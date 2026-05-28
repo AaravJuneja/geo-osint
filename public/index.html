@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>GEO-OSINT Challenge 01</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.7/build/pannellum.css" />
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="site-header" aria-label="Challenge header">
+        <div>
+          <p class="eyebrow">Hard GEO-OSINT</p>
+          <h1>Challenge 01</h1>
+        </div>
+        <div class="badges" aria-label="Challenge properties">
+          <span>360 scene</span>
+          <span>No added blur</span>
+          <span>Multires quality</span>
+        </div>
+      </header>
+
+      <main class="challenge-layout">
+        <section class="viewer-card" aria-label="Panorama viewer">
+          <div id="panorama" class="panorama" role="application" aria-label="Interactive panorama"></div>
+          <div class="viewer-hud" aria-live="polite">
+            <span id="viewHud">yaw -- | pitch -- | zoom --</span>
+          </div>
+          <noscript>
+            <p class="no-script">JavaScript is required to load the 360-degree viewer.</p>
+          </noscript>
+        </section>
+
+        <aside class="briefing" aria-label="Challenge briefing">
+          <section class="panel primary-panel">
+            <p class="panel-kicker">Mission</p>
+            <h2>Find the exact camera position.</h2>
+            <p>
+              Identify the road or underpass, city, country, and coordinates. A strong answer includes visual evidence, not just a guessed pin.
+            </p>
+          </section>
+
+          <section class="panel">
+            <h2>Answer Format</h2>
+            <p class="answer-format">lat, lon - road/intersection - city, country - evidence</p>
+            <button class="ghost-button" id="copyTemplate" type="button">Copy template</button>
+          </section>
+
+          <section class="panel">
+            <h2>Rules</h2>
+            <ul class="rule-list">
+              <li>Use the panorama and open-source research only.</li>
+              <li>No page-source hunting or asset-name guessing.</li>
+              <li>Coordinates should land within 25 metres of the camera.</li>
+              <li>Native Street View redactions remain; no extra blur is applied.</li>
+            </ul>
+          </section>
+
+          <section class="panel notes-panel">
+            <div class="panel-row">
+              <h2>Solver Notes</h2>
+              <button class="text-button" id="clearNotes" type="button">Clear</button>
+            </div>
+            <textarea id="notes" spellcheck="false" placeholder="Track clues: road markings, bridge type, signs, business density, lane layout, vegetation, shadows..."></textarea>
+          </section>
+        </aside>
+      </main>
+
+      <footer class="site-footer">
+        <span>Viewer: Pannellum 2.5.7</span>
+        <span>Imagery attribution: Google Street View</span>
+      </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.7/build/pannellum.js"></script>
+    <script src="/assets/app.js" type="module"></script>
+  </body>
+</html>
