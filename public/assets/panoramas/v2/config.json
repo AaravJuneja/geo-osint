@@ -1,0 +1,14 @@
+{
+  "startYaw": 327.7392474303669,
+  "startPitch": 31.30816345566562,
+  "type": "multires",
+  "multiRes": {
+    "basePath": "/assets/panoramas/v2",
+    "path": "/%l/%s%y_%x",
+    "fallbackPath": "/fallback/%s",
+    "extension": "jpg",
+    "tileResolution": 512,
+    "maxLevel": 5,
+    "cubeResolution": 5208
+  }
+}
