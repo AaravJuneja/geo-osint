@@ -37,7 +37,7 @@ module.exports = async function handler(req, res) {
     return sendJson(res, 200, { ok: true, flag: config.flag });
   }
 
-  return sendJson(res, 200, { ok: false, message: "No match." });
+  return sendJson(res, 200, { ok: false, message: "Incorrect." });
 };
 
 function getConfig() {
