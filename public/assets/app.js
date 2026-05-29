@@ -1,16 +1,7 @@
-const PANORAMA_PATH = "/assets/panorama";
-const INITIAL_HFOV = 88;
-const MIN_HFOV = 12;
-const MAX_HFOV = 110;
-const MAP_START = [20, 0];
-const MAP_START_ZOOM = 2;
-const MAP_GUESS_ZOOM = 17;
-const MAP_MAX_ZOOM = 19;
-
 async function start() {
   setupGuess();
 
-  const response = await fetch(`${PANORAMA_PATH}/config.json`, { cache: "no-store" });
+  const response = await fetch("/assets/panorama/config.json", { cache: "no-store" });
 
   if (!response.ok) {
     throw new Error("");
@@ -19,7 +10,7 @@ async function start() {
   const { startYaw, startPitch, ...generatedConfig } = await response.json();
   pannellum.viewer("panorama", {
     ...generatedConfig,
-    preview: `${PANORAMA_PATH}/preview.jpg`,
+    preview: "/assets/panorama/preview.jpg",
     autoLoad: true,
     showControls: true,
     showZoomCtrl: true,
@@ -29,9 +20,9 @@ async function start() {
     compass: false,
     yaw: startYaw,
     pitch: startPitch,
-    hfov: INITIAL_HFOV,
-    minHfov: MIN_HFOV,
-    maxHfov: MAX_HFOV
+    hfov: 88,
+    minHfov: 12,
+    maxHfov: 110
   });
 }
 
@@ -109,9 +100,9 @@ function setupGuess() {
       return;
     }
 
-    map = L.map("coordinateMap", { zoomControl: false }).setView(MAP_START, MAP_START_ZOOM);
+    map = L.map("coordinateMap", { zoomControl: false }).setView([20, 0], 2);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: MAP_MAX_ZOOM,
+      maxZoom: 19,
       attribution: ""
     }).addTo(map);
   }
@@ -131,7 +122,7 @@ function setupGuess() {
     }
 
     const point = [lat, lng];
-    map.setView(point, MAP_GUESS_ZOOM, { animate: true });
+    map.setView(point, 17, { animate: true });
 
     if (marker) {
       marker.setLatLng(point);
