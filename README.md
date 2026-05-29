@@ -21,6 +21,10 @@ Set these in Vercel Project Settings before deploying:
 
 Do not commit real secret values. The local `.env` file is ignored by Git and can be copied into Vercel Project Settings.
 
+## Cloudflare Access
+
+Cloudflare Access can sit in front of the Vercel deployment if you use a custom domain on Cloudflare. Configure an Access application for the challenge hostname and put the shared access details in the challenge description.
+
 ## Vercel Settings
 
 - Framework preset: Other
