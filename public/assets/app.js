@@ -94,7 +94,7 @@ function setupGuess() {
         result.textContent = data.flag;
       } else {
         result.dataset.state = "fail";
-        result.textContent = data.message || "No match.";
+        result.textContent = data.message || "Incorrect.";
       }
     } catch (error) {
       result.dataset.state = "fail";
