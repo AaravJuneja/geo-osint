@@ -1,32 +1,31 @@
-const SCENES = new Set(["v1", "v2", "v3"]);
-const TARGETS = {
-  v1: [43.4513833, -79.6947129],
-  v2: [43.4509942, -79.6940503],
-  v3: [43.4509355, -79.6939561]
-};
+// Adjustable challenge settings.
+// PANORAMA_PATH must match the generated asset folder from scripts/build_panorama.py.
+const PANORAMA_PATH = "/assets/panorama";
+
+// Correct guess target in decimal degrees: [latitude, longitude].
+const TARGET = [43.4509942, -79.6940503];
+
+// Accepted distance from TARGET, in metres.
 const SUCCESS_METERS = 25;
 
-function currentScene() {
-  const scene = window.location.pathname.split("/").filter(Boolean)[0];
-  return SCENES.has(scene) ? scene : "v1";
-}
+// Pannellum view / zoom options.
+const INITIAL_HFOV = 88;
+const MIN_HFOV = 12;
+const MAX_HFOV = 110;
 
-function markCurrent(scene) {
-  document.querySelectorAll("[data-scene]").forEach((link) => {
-    if (link.dataset.scene === scene) {
-      link.setAttribute("aria-current", "page");
-    } else {
-      link.removeAttribute("aria-current");
-    }
-  });
-}
+// Leaflet map options for the guess overlay.
+const MAP_START = [20, 0];
+const MAP_START_ZOOM = 2;
+const MAP_MAX_ZOOM = 19;
+
+// Result strings shown after checking a guess.
+const CORRECT_TEXT = "sike";
+const WRONG_TEXT = "wrong";
 
 async function start() {
-  const scene = currentScene();
-  markCurrent(scene);
-  setupGuess(scene);
+  setupGuess();
 
-  const response = await fetch(`/assets/panoramas/${scene}/config.json`, { cache: "no-store" });
+  const response = await fetch(`${PANORAMA_PATH}/config.json`, { cache: "no-store" });
 
   if (!response.ok) {
     throw new Error("");
@@ -35,7 +34,7 @@ async function start() {
   const { startYaw, startPitch, ...generatedConfig } = await response.json();
   pannellum.viewer("panorama", {
     ...generatedConfig,
-    preview: `/assets/panoramas/${scene}/preview.jpg`,
+    preview: `${PANORAMA_PATH}/preview.jpg`,
     autoLoad: true,
     showControls: true,
     showZoomCtrl: true,
@@ -45,13 +44,13 @@ async function start() {
     compass: false,
     yaw: startYaw,
     pitch: startPitch,
-    hfov: 88,
-    minHfov: 12,
-    maxHfov: 110
+    hfov: INITIAL_HFOV,
+    minHfov: MIN_HFOV,
+    maxHfov: MAX_HFOV
   });
 }
 
-function setupGuess(scene) {
+function setupGuess() {
   const panel = document.querySelector("#guessPanel");
   const toggle = document.querySelector("#guessToggle");
   const check = document.querySelector("#checkGuess");
@@ -64,9 +63,9 @@ function setupGuess(scene) {
     panel.classList.toggle("is-open");
 
     if (!map) {
-      map = L.map("guessMap", { worldCopyJump: true }).setView([20, 0], 2);
+      map = L.map("guessMap", { worldCopyJump: true }).setView(MAP_START, MAP_START_ZOOM);
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
+        maxZoom: MAP_MAX_ZOOM,
         attribution: ""
       }).addTo(map);
 
@@ -93,11 +92,11 @@ function setupGuess(scene) {
 
   check.addEventListener("click", () => {
     if (!selected) {
-      result.textContent = "wrong";
+      result.textContent = WRONG_TEXT;
       return;
     }
 
-    result.textContent = distanceMeters(selected, TARGETS[scene]) <= SUCCESS_METERS ? "sike" : "wrong";
+    result.textContent = distanceMeters(selected, TARGET) <= SUCCESS_METERS ? CORRECT_TEXT : WRONG_TEXT;
   });
 }
 
