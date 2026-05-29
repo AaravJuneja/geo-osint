@@ -15,14 +15,22 @@
       <div id="panorama" class="panorama"></div>
     </main>
     <section class="guess-panel" id="guessPanel">
-      <button class="guess-toggle" id="guessToggle" type="button">guess</button>
-      <div class="guess-box">
-        <div id="guessMap" class="guess-map"></div>
+      <button class="guess-toggle" id="guessToggle" type="button">submit coordinates</button>
+      <form class="guess-box" id="guessForm" autocomplete="off">
+        <label>
+          <span>latitude</span>
+          <input id="latitudeInput" name="lat" type="number" inputmode="decimal" step="any" min="-90" max="90" required />
+        </label>
+        <label>
+          <span>longitude</span>
+          <input id="longitudeInput" name="lng" type="number" inputmode="decimal" step="any" min="-180" max="180" required />
+        </label>
+        <div id="coordinateMap" class="coordinate-map"></div>
         <div class="guess-actions">
-          <button id="checkGuess" type="button">check</button>
-          <span id="guessResult"></span>
+          <button id="checkGuess" type="submit">check</button>
+          <span id="guessResult" aria-live="polite"></span>
         </div>
-      </div>
+      </form>
     </section>
 
     <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.7/build/pannellum.js"></script>

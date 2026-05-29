@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-"""Build Pannellum multiresolution tiles for the final scene."""
 
 from __future__ import annotations
 
@@ -14,9 +13,6 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-# Adjustable source scene settings.
-# panoid comes from the final selected Google Street View URL.
-# yaw / pitch control the initial Pannellum camera direction.
 SCENE = {
     "name": "final",
     "panoid": "2Im_M7yjJ1OS5HUFvCI8hg",
@@ -24,14 +20,10 @@ SCENE = {
     "pitch": 31.30816345566562,
 }
 
-# Adjustable Google source tile grid. Zoom 5 is the highest-quality 16K source
-# used here; change cols / rows only if the source endpoint grid changes.
 SOURCE_ZOOM = 5
 SOURCE_COLS = 32
 SOURCE_ROWS = 16
 SOURCE_TILE_SIZE = 512
-
-# Adjustable Pannellum output settings.
 OUTPUT_TILE_SIZE = 512
 JPEG_QUALITY = 92
 
@@ -272,7 +264,7 @@ def main() -> None:
 
     build_scene(SCENE)
 
-    print(f"Done. Netlify publish directory: {PUBLIC_DIR}")
+    print(f"Done. Vercel static assets directory: {PUBLIC_DIR}")
 
 
 if __name__ == "__main__":
