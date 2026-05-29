@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build Pannellum multiresolution tiles for all viewer routes."""
+"""Build Pannellum multiresolution tiles for the final scene."""
 
 from __future__ import annotations
 
@@ -14,22 +14,31 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-SCENES = (
-    {"id": "v1", "panoid": "muOStU_C45UDgZ_E5jcMFA", "yaw": 134.0, "pitch": 2.0},
-    {"id": "v2", "panoid": "2Im_M7yjJ1OS5HUFvCI8hg", "yaw": 327.7392474303669, "pitch": 31.30816345566562},
-    {"id": "v3", "panoid": "XS8353e-4MY_m3HN7Ni4Qg", "yaw": 162.73433649158335, "pitch": 30.239691372757655},
-)
+# Adjustable source scene settings.
+# panoid comes from the final selected Google Street View URL.
+# yaw / pitch control the initial Pannellum camera direction.
+SCENE = {
+    "name": "final",
+    "panoid": "2Im_M7yjJ1OS5HUFvCI8hg",
+    "yaw": 327.7392474303669,
+    "pitch": 31.30816345566562,
+}
+
+# Adjustable Google source tile grid. Zoom 5 is the highest-quality 16K source
+# used here; change cols / rows only if the source endpoint grid changes.
 SOURCE_ZOOM = 5
 SOURCE_COLS = 32
 SOURCE_ROWS = 16
 SOURCE_TILE_SIZE = 512
+
+# Adjustable Pannellum output settings.
 OUTPUT_TILE_SIZE = 512
 JPEG_QUALITY = 92
 
 ROOT = Path(__file__).resolve().parents[1]
 PUBLIC_DIR = ROOT / "public"
-PANORAMAS_DIR = PUBLIC_DIR / "assets" / "panoramas"
-LEGACY_PANORAMA_DIR = PUBLIC_DIR / "assets" / "panorama"
+PANORAMA_DIR = PUBLIC_DIR / "assets" / "panorama"
+LEGACY_PANORAMAS_DIR = PUBLIC_DIR / "assets" / "panoramas"
 LEGACY_PREVIEW_PATH = PUBLIC_DIR / "assets" / "preview.jpg"
 
 HEADERS = {
@@ -203,7 +212,7 @@ def write_config(scene: dict[str, str | float], panorama_dir: Path, cube_size: i
         "startPitch": scene["pitch"],
         "type": "multires",
         "multiRes": {
-            "basePath": f"/assets/panoramas/{scene['id']}",
+            "basePath": "/assets/panorama",
             "path": "/%l/%s%y_%x",
             "fallbackPath": "/fallback/%s",
             "extension": "jpg",
@@ -217,13 +226,13 @@ def write_config(scene: dict[str, str | float], panorama_dir: Path, cube_size: i
 
 
 def build_scene(scene: dict[str, str | float]) -> None:
-    scene_id = str(scene["id"])
-    panorama_dir = PANORAMAS_DIR / scene_id
+    scene_name = str(scene["name"])
+    panorama_dir = PANORAMA_DIR
 
-    print(f"[{scene_id}] Downloading Street View source tiles...")
+    print(f"[{scene_name}] Downloading Street View source tiles...")
     download_tiles(scene)
 
-    print(f"[{scene_id}] Stitching 16K equirectangular panorama...")
+    print(f"[{scene_name}] Stitching 16K equirectangular panorama...")
     equirectangular = stitch_equirectangular(scene)
 
     if panorama_dir.exists():
@@ -241,7 +250,7 @@ def build_scene(scene: dict[str, str | float]) -> None:
     max_level = int(math.ceil(math.log(float(cube_size) / OUTPUT_TILE_SIZE, 2))) + 1
     source = np.asarray(equirectangular, dtype=np.uint8)
 
-    print(f"[{scene_id}] Generating Pannellum multires faces at {cube_size}px, max level {max_level}...")
+    print(f"[{scene_name}] Generating Pannellum multires faces at {cube_size}px, max level {max_level}...")
     for face_letter in ("f", "b", "u", "d", "l", "r"):
         print(f"  face {face_letter}")
         face = equirectangular_to_face(source, face_letter, cube_size)
@@ -254,15 +263,14 @@ def build_scene(scene: dict[str, str | float]) -> None:
 def main() -> None:
     Image.MAX_IMAGE_PIXELS = None
 
-    if PANORAMAS_DIR.exists():
-        shutil.rmtree(PANORAMAS_DIR)
-    if LEGACY_PANORAMA_DIR.exists():
-        shutil.rmtree(LEGACY_PANORAMA_DIR)
+    if PANORAMA_DIR.exists():
+        shutil.rmtree(PANORAMA_DIR)
+    if LEGACY_PANORAMAS_DIR.exists():
+        shutil.rmtree(LEGACY_PANORAMAS_DIR)
     if LEGACY_PREVIEW_PATH.exists():
         LEGACY_PREVIEW_PATH.unlink()
 
-    for scene in SCENES:
-        build_scene(scene)
+    build_scene(SCENE)
 
     print(f"Done. Netlify publish directory: {PUBLIC_DIR}")
 
