@@ -33,40 +33,78 @@ body {
 }
 
 .guess-toggle,
+.guess-box input,
 .guess-actions button {
   border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 999px;
-  padding: 0.55rem 0.8rem;
   background: rgba(0, 0, 0, 0.68);
   color: #fff;
-  cursor: pointer;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
   font-size: 0.82rem;
+}
+
+.guess-toggle,
+.guess-actions button {
+  border-radius: 999px;
+  padding: 0.55rem 0.8rem;
+  cursor: pointer;
   font-weight: 700;
+}
+
+.guess-actions button:disabled {
+  cursor: wait;
+  opacity: 0.62;
 }
 
 .guess-box {
   display: none;
-  width: min(28rem, calc(100vw - 1.5rem));
+  width: min(24rem, calc(100vw - 1.5rem));
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: 1rem;
   background: rgba(0, 0, 0, 0.72);
+  padding: 0.75rem;
 }
 
 .guess-panel.is-open .guess-box {
   display: block;
 }
 
-.guess-map {
-  height: min(22rem, 52vh);
+.guess-box label {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 0.7rem;
+  color: rgba(255, 255, 255, 0.78);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.coordinate-map {
+  height: min(16rem, 42vh);
+  margin-bottom: 0.7rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0.75rem;
+  background: #101317;
+}
+
+.guess-box input {
+  width: 100%;
+  border-radius: 0.65rem;
+  padding: 0.7rem 0.75rem;
+  outline: none;
+}
+
+.guess-box input:focus {
+  border-color: rgba(255, 255, 255, 0.75);
 }
 
 .guess-actions {
   display: flex;
   align-items: center;
   gap: 0.7rem;
-  padding: 0.55rem;
 }
 
 #guessResult {
@@ -74,4 +112,21 @@ body {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
   font-size: 0.95rem;
   font-weight: 800;
+  word-break: break-word;
+}
+
+#guessResult[data-state="fail"] {
+  color: #ffb4b4;
+}
+
+#guessResult[data-state="success"] {
+  color: #b9ffcf;
+}
+
+.leaflet-container {
+  background: #101317;
+}
+
+.leaflet-control-attribution {
+  display: none;
 }

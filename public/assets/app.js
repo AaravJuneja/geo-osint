@@ -1,26 +1,11 @@
-// Adjustable challenge settings.
-// PANORAMA_PATH must match the generated asset folder from scripts/build_panorama.py.
 const PANORAMA_PATH = "/assets/panorama";
-
-// Correct guess target in decimal degrees: [latitude, longitude].
-const TARGET = [43.4509942, -79.6940503];
-
-// Accepted distance from TARGET, in metres.
-const SUCCESS_METERS = 25;
-
-// Pannellum view / zoom options.
 const INITIAL_HFOV = 88;
 const MIN_HFOV = 12;
 const MAX_HFOV = 110;
-
-// Leaflet map options for the guess overlay.
 const MAP_START = [20, 0];
 const MAP_START_ZOOM = 2;
+const MAP_GUESS_ZOOM = 17;
 const MAP_MAX_ZOOM = 19;
-
-// Result strings shown after checking a guess.
-const CORRECT_TEXT = "sike";
-const WRONG_TEXT = "wrong";
 
 async function start() {
   setupGuess();
@@ -53,66 +38,113 @@ async function start() {
 function setupGuess() {
   const panel = document.querySelector("#guessPanel");
   const toggle = document.querySelector("#guessToggle");
-  const check = document.querySelector("#checkGuess");
+  const form = document.querySelector("#guessForm");
+  const submit = document.querySelector("#checkGuess");
+  const latitude = document.querySelector("#latitudeInput");
+  const longitude = document.querySelector("#longitudeInput");
   const result = document.querySelector("#guessResult");
   let map;
   let marker;
-  let selected;
 
   toggle.addEventListener("click", () => {
     panel.classList.toggle("is-open");
+    result.textContent = "";
+    result.dataset.state = "";
 
-    if (!map) {
-      map = L.map("guessMap", { worldCopyJump: true }).setView(MAP_START, MAP_START_ZOOM);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: MAP_MAX_ZOOM,
-        attribution: ""
-      }).addTo(map);
-
-      map.on("click", (event) => {
-        selected = event.latlng;
-        result.textContent = "";
-
-        if (marker) {
-          marker.setLatLng(selected);
-        } else {
-          marker = L.circleMarker(selected, {
-            radius: 7,
-            color: "#ffffff",
-            fillColor: "#ffffff",
-            fillOpacity: 0.85,
-            weight: 2
-          }).addTo(map);
-        }
-      });
+    if (panel.classList.contains("is-open")) {
+      ensureMap();
+      updateMapPreview();
+      window.setTimeout(() => map.invalidateSize(), 0);
     }
-
-    window.setTimeout(() => map.invalidateSize(), 0);
   });
 
-  check.addEventListener("click", () => {
-    if (!selected) {
-      result.textContent = WRONG_TEXT;
+  latitude.addEventListener("input", updateMapPreview);
+  longitude.addEventListener("input", updateMapPreview);
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const lat = Number(latitude.value);
+    const lng = Number(longitude.value);
+
+    result.dataset.state = "";
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      result.textContent = "Enter valid coordinates.";
       return;
     }
 
-    result.textContent = distanceMeters(selected, TARGET) <= SUCCESS_METERS ? CORRECT_TEXT : WRONG_TEXT;
+    submit.disabled = true;
+    result.textContent = "Checking...";
+
+    try {
+      const response = await fetch("/api/guess", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lat, lng })
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Request failed.");
+      }
+
+      if (data.ok) {
+        result.dataset.state = "success";
+        result.textContent = data.flag;
+      } else {
+        result.dataset.state = "fail";
+        result.textContent = data.message || "No match.";
+      }
+    } catch (error) {
+      result.dataset.state = "fail";
+      result.textContent = error.message || "Try again later.";
+    } finally {
+      submit.disabled = false;
+    }
   });
-}
 
-function distanceMeters(point, target) {
-  const radius = 6371008.8;
-  const pointLat = toRadians(point.lat);
-  const targetLat = toRadians(target[0]);
-  const deltaLat = toRadians(target[0] - point.lat);
-  const deltaLng = toRadians(target[1] - point.lng);
-  const chord = Math.sin(deltaLat / 2) ** 2 + Math.cos(pointLat) * Math.cos(targetLat) * Math.sin(deltaLng / 2) ** 2;
+  function ensureMap() {
+    if (map) {
+      return;
+    }
 
-  return 2 * radius * Math.atan2(Math.sqrt(chord), Math.sqrt(1 - chord));
-}
+    map = L.map("coordinateMap", { zoomControl: false }).setView(MAP_START, MAP_START_ZOOM);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: MAP_MAX_ZOOM,
+      attribution: ""
+    }).addTo(map);
+  }
 
-function toRadians(value) {
-  return value * Math.PI / 180;
+  function updateMapPreview() {
+    if (!panel.classList.contains("is-open")) {
+      return;
+    }
+
+    ensureMap();
+
+    const lat = Number(latitude.value);
+    const lng = Number(longitude.value);
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      return;
+    }
+
+    const point = [lat, lng];
+    map.setView(point, MAP_GUESS_ZOOM, { animate: true });
+
+    if (marker) {
+      marker.setLatLng(point);
+    } else {
+      marker = L.circleMarker(point, {
+        radius: 7,
+        color: "#ffffff",
+        fillColor: "#ffffff",
+        fillOpacity: 0.9,
+        weight: 2
+      }).addTo(map);
+    }
+  }
 }
 
 start().catch((error) => {

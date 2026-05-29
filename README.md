@@ -1,29 +1,48 @@
-# Final Panorama Handoff
+# Vercel CTF Panorama Challenge
 
-This repo is trimmed to the final selected version and serves it from the root route.
+This repo serves the final panorama from `/` and checks guesses through a Vercel backend function. The frontend does not contain the target coordinates or flag.
 
 ## What Is Included
 
-- Static Netlify site in `public/`
-- Final route at `/`
+- Static viewer files in `public/`
 - Pannellum multires panorama assets in `public/assets/panorama/`
-- Guess map UI with `sike` / `wrong` result output
+- Coordinate submission form in `public/assets/app.js`
+- Backend validator in `api/guess.js`
+- Vercel headers in `vercel.json`
 
-## Netlify Settings
+## Required Vercel Environment Variables
 
-- Branch: `main`
-- Base directory: leave blank
+Set these in Vercel Project Settings before deploying:
+
+- `CTF_TARGET_LAT`
+- `CTF_TARGET_LNG`
+- `CTF_FLAG`
+- `CTF_SUCCESS_METERS`, optional, defaults to `25`
+
+Do not commit real secret values. The local `.env` file is ignored by Git and can be copied into Vercel Project Settings.
+
+## Vercel Settings
+
+- Framework preset: Other
 - Build command: leave blank
-- Publish directory: `public`
-- Functions directory: leave blank
+- Output directory: leave blank
+- Install command: leave blank
+
+Vercel serves files from `public/` at the root route and functions from `api/`.
 
 ## Local Preview
+
+Use Vercel locally if you need the `/api/guess` function:
+
+```bash
+vercel dev
+```
+
+The static viewer alone can still be previewed with:
 
 ```bash
 python3 -m http.server 4173 --directory public
 ```
-
-Open `http://127.0.0.1:4173/`.
 
 ## Regenerate Panorama Assets
 
@@ -34,12 +53,3 @@ python3 scripts/build_panorama.py
 ```
 
 The script writes the final scene to `public/assets/panorama/`.
-
-## Implementation Notes
-
-- `public/assets/app.js` initializes Pannellum and the guess checker.
-- `public/assets/styles.css` contains only minimal fullscreen viewer and map overlay styles.
-- Adjustable viewer settings are commented at the top of `public/assets/app.js`.
-- Adjustable source / tile generation settings are commented at the top of `scripts/build_panorama.py`.
-- The answer tolerance is controlled by `SUCCESS_METERS` in `public/assets/app.js`.
-- The final target point and viewer start angle are centralized in `app.js` and `scripts/build_panorama.py` for easy replacement by the developer.
