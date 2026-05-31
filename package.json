@@ -1,0 +1,14 @@
+{
+  "name": "osint-ctf",
+  "version": "1.0.0",
+  "description": "Vercel CTF Panorama Challenge",
+  "private": true,
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step required for static site'",
+    "lint": "echo 'No linting configured'"
+  },
+  "dependencies": {
+    "@vercel/analytics": "^1.4.1"
+  }
+}
