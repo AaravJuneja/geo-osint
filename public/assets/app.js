@@ -4,7 +4,7 @@ async function start() {
   const response = await fetch("/assets/panorama/config.json", { cache: "no-store" });
 
   if (!response.ok) {
-    throw new Error("");
+    throw new Error("Failed to load panorama configuration");
   }
 
   const { startYaw, startPitch, ...generatedConfig } = await response.json();
