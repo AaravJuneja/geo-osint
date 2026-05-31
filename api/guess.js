@@ -1,5 +1,3 @@
-const MAX_BODY_BYTES = 4096;
-
 module.exports = async function handler(req, res) {
   setNoStore(res);
 
@@ -77,7 +75,7 @@ async function readJsonBody(req) {
   let raw = "";
   for await (const chunk of req) {
     raw += chunk;
-    if (Buffer.byteLength(raw) > MAX_BODY_BYTES) {
+    if (Buffer.byteLength(raw) > 4096) {
       throw new Error("Payload too large");
     }
   }
