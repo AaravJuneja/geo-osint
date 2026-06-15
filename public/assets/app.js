@@ -84,11 +84,17 @@ function setupGuess() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lat, lng })
       });
-      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Request failed.");
+        let message = "Request failed.";
+        try {
+          const errorData = await response.json();
+          message = errorData.message || message;
+        } catch {}
+        throw new Error(message);
       }
+
+      const data = await response.json();
 
       if (data.ok) {
         result.dataset.state = "success";

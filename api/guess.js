@@ -1,4 +1,4 @@
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   setNoStore(res);
 
   if (req.method === "OPTIONS") {
