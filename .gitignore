@@ -1,9 +1,4 @@
 .cache/
 __pycache__/
 .env
-.env.*
 .vercel/
-.DS_Store
-Thumbs.db
-node_modules/
-.vercel

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import concurrent.futures
 import json
 import math
@@ -13,13 +14,6 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-SCENE = {
-    "name": "final",
-    "panoid": "2Im_M7yjJ1OS5HUFvCI8hg",
-    "yaw": 327.7392474303669,
-    "pitch": 31.30816345566562,
-}
-
 SOURCE_ZOOM = 5
 SOURCE_COLS = 32
 SOURCE_ROWS = 16
@@ -29,9 +23,7 @@ JPEG_QUALITY = 92
 
 ROOT = Path(__file__).resolve().parents[1]
 PUBLIC_DIR = ROOT / "public"
-PANORAMA_DIR = PUBLIC_DIR / "assets" / "panorama"
-LEGACY_PANORAMAS_DIR = PUBLIC_DIR / "assets" / "panoramas"
-LEGACY_PREVIEW_PATH = PUBLIC_DIR / "assets" / "preview.jpg"
+DEFAULT_OUT_DIR = PUBLIC_DIR / "assets" / "panorama"
 
 HEADERS = {
     "User-Agent": (
@@ -42,19 +34,19 @@ HEADERS = {
 }
 
 
-def cache_dir(scene: dict[str, str | float]) -> Path:
-    return ROOT / ".cache" / "streetview" / str(scene["panoid"]) / f"z{SOURCE_ZOOM}"
+def cache_dir(panoid: str) -> Path:
+    return ROOT / ".cache" / "streetview" / panoid / f"z{SOURCE_ZOOM}"
 
 
-def tile_url(scene: dict[str, str | float], x: int, y: int) -> str:
+def tile_url(panoid: str, x: int, y: int) -> str:
     return (
         "https://streetviewpixels-pa.googleapis.com/v1/tile"
-        f"?cb_client=maps_sv.tactile&panoid={scene['panoid']}&zoom={SOURCE_ZOOM}&x={x}&y={y}"
+        f"?cb_client=maps_sv.tactile&panoid={panoid}&zoom={SOURCE_ZOOM}&x={x}&y={y}"
     )
 
 
-def download_tile(scene: dict[str, str | float], x: int, y: int) -> None:
-    scene_cache_dir = cache_dir(scene)
+def download_tile(panoid: str, x: int, y: int) -> None:
+    scene_cache_dir = cache_dir(panoid)
     scene_cache_dir.mkdir(parents=True, exist_ok=True)
     destination = scene_cache_dir / f"{x}_{y}.jpg"
 
@@ -63,7 +55,7 @@ def download_tile(scene: dict[str, str | float], x: int, y: int) -> None:
 
     last_error = None
     for attempt in range(5):
-        request = urllib.request.Request(tile_url(scene, x, y), headers=HEADERS)
+        request = urllib.request.Request(tile_url(panoid, x, y), headers=HEADERS)
         try:
             with urllib.request.urlopen(request, timeout=30) as response:
                 data = response.read()
@@ -77,17 +69,17 @@ def download_tile(scene: dict[str, str | float], x: int, y: int) -> None:
     destination.write_bytes(data)
 
 
-def download_tiles(scene: dict[str, str | float]) -> None:
+def download_tiles(panoid: str) -> None:
     coords = [(x, y) for y in range(SOURCE_ROWS) for x in range(SOURCE_COLS)]
     with concurrent.futures.ThreadPoolExecutor(max_workers=16) as executor:
-        list(executor.map(lambda item: download_tile(scene, *item), coords))
+        list(executor.map(lambda item: download_tile(panoid, *item), coords))
 
 
-def stitch_equirectangular(scene: dict[str, str | float]) -> Image.Image:
+def stitch_equirectangular(panoid: str) -> Image.Image:
     width = SOURCE_COLS * SOURCE_TILE_SIZE
     height = SOURCE_ROWS * SOURCE_TILE_SIZE
     panorama = Image.new("RGB", (width, height))
-    scene_cache_dir = cache_dir(scene)
+    scene_cache_dir = cache_dir(panoid)
 
     for y in range(SOURCE_ROWS):
         for x in range(SOURCE_COLS):
@@ -95,6 +87,13 @@ def stitch_equirectangular(scene: dict[str, str | float]) -> Image.Image:
             panorama.paste(tile, (x * SOURCE_TILE_SIZE, y * SOURCE_TILE_SIZE))
 
     return panorama
+
+
+def load_equirectangular(panoid: str) -> Image.Image:
+    print("Downloading Street View source tiles...")
+    download_tiles(panoid)
+    print("Stitching 16K equirectangular panorama...")
+    return stitch_equirectangular(panoid)
 
 
 def bilinear_sample(source: np.ndarray, xf: np.ndarray, yf: np.ndarray) -> np.ndarray:
@@ -198,13 +197,25 @@ def save_fallback(face: Image.Image, face_letter: str, panorama_dir: Path) -> No
     )
 
 
-def write_config(scene: dict[str, str | float], panorama_dir: Path, cube_size: int, max_level: int) -> None:
+def url_base(out_dir: Path) -> str:
+    if out_dir == PUBLIC_DIR or PUBLIC_DIR in out_dir.parents:
+        return "/" + out_dir.relative_to(PUBLIC_DIR).as_posix()
+    return out_dir.as_posix()
+
+
+def write_config(
+    yaw: float,
+    pitch: float,
+    panorama_dir: Path,
+    cube_size: int,
+    max_level: int,
+) -> None:
     config = {
-        "startYaw": scene["yaw"],
-        "startPitch": scene["pitch"],
+        "startYaw": yaw,
+        "startPitch": pitch,
         "type": "multires",
         "multiRes": {
-            "basePath": "/assets/panorama",
+            "basePath": url_base(panorama_dir),
             "path": "/%l/%s%y_%x",
             "fallbackPath": "/fallback/%s",
             "extension": "jpg",
@@ -217,22 +228,18 @@ def write_config(scene: dict[str, str | float], panorama_dir: Path, cube_size: i
     (panorama_dir / "config.json").write_text(json.dumps(config, indent=2), encoding="utf-8")
 
 
-def build_scene(scene: dict[str, str | float]) -> None:
-    scene_name = str(scene["name"])
-    panorama_dir = PANORAMA_DIR
-
-    print(f"[{scene_name}] Downloading Street View source tiles...")
-    download_tiles(scene)
-
-    print(f"[{scene_name}] Stitching 16K equirectangular panorama...")
-    equirectangular = stitch_equirectangular(scene)
-
-    if panorama_dir.exists():
-        shutil.rmtree(panorama_dir)
-    panorama_dir.mkdir(parents=True, exist_ok=True)
+def build_scene(
+    equirectangular: Image.Image,
+    yaw: float,
+    pitch: float,
+    out_dir: Path,
+) -> None:
+    if out_dir.exists():
+        shutil.rmtree(out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
 
     equirectangular.resize((1600, 800), Image.Resampling.LANCZOS).save(
-        panorama_dir / "preview.jpg",
+        out_dir / "preview.jpg",
         quality=86,
         optimize=True,
         progressive=True,
@@ -242,29 +249,41 @@ def build_scene(scene: dict[str, str | float]) -> None:
     max_level = int(math.ceil(math.log(float(cube_size) / OUTPUT_TILE_SIZE, 2))) + 1
     source = np.asarray(equirectangular, dtype=np.uint8)
 
-    print(f"[{scene_name}] Generating Pannellum multires faces at {cube_size}px, max level {max_level}...")
+    print(f"Generating Pannellum multires faces at {cube_size}px, max level {max_level}...")
     for face_letter in ("f", "b", "u", "d", "l", "r"):
         print(f"  face {face_letter}")
         face = equirectangular_to_face(source, face_letter, cube_size)
-        save_fallback(face, face_letter, panorama_dir)
-        save_multires_tiles(face, face_letter, max_level, cube_size, panorama_dir)
+        save_fallback(face, face_letter, out_dir)
+        save_multires_tiles(face, face_letter, max_level, cube_size, out_dir)
 
-    write_config(scene, panorama_dir, cube_size, max_level)
+    write_config(yaw, pitch, out_dir, cube_size, max_level)
 
 
 def main() -> None:
     Image.MAX_IMAGE_PIXELS = None
 
-    if PANORAMA_DIR.exists():
-        shutil.rmtree(PANORAMA_DIR)
-    if LEGACY_PANORAMAS_DIR.exists():
-        shutil.rmtree(LEGACY_PANORAMAS_DIR)
-    if LEGACY_PREVIEW_PATH.exists():
-        LEGACY_PREVIEW_PATH.unlink()
+    parser = argparse.ArgumentParser(
+        description="Generate Pannellum panorama assets for a geo-OSINT challenge "
+        "from Google Street View tiles. You will be prompted for the panorama ID."
+    )
+    parser.add_argument("--yaw", type=float, default=0.0, help="initial horizontal view")
+    parser.add_argument("--pitch", type=float, default=0.0, help="initial vertical view")
+    parser.add_argument(
+        "--out",
+        type=Path,
+        default=DEFAULT_OUT_DIR,
+        help=f"output directory (default: {DEFAULT_OUT_DIR})",
+    )
+    args = parser.parse_args()
 
-    build_scene(SCENE)
+    panoid = input("Google Street View panorama ID: ").strip()
+    if not panoid:
+        parser.error("a panorama ID is required")
 
-    print(f"Done. Vercel static assets directory: {PUBLIC_DIR}")
+    equirectangular = load_equirectangular(panoid)
+    build_scene(equirectangular, args.yaw, args.pitch, args.out)
+
+    print(f"Done. Wrote panorama assets to: {args.out}")
 
 
 if __name__ == "__main__":

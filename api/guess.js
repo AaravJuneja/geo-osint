@@ -31,18 +31,23 @@ export default async function handler(req, res) {
 
   const distance = distanceMeters(lat, lng, config.targetLat, config.targetLng);
 
-  if (distance <= config.successMeters) {
-    return sendJson(res, 200, { ok: true, flag: config.flag });
+  if (distance <= config.radiusMeters) {
+    return sendJson(res, 200, {
+      ok: true,
+      answer: config.answer,
+      message: config.successMessage || config.answer
+    });
   }
 
   return sendJson(res, 200, { ok: false, message: "Incorrect." });
 };
 
 function getConfig() {
-  const targetLat = Number(process.env.CTF_TARGET_LAT);
-  const targetLng = Number(process.env.CTF_TARGET_LNG);
-  const successMeters = Number(process.env.CTF_SUCCESS_METERS || "25");
-  const flag = process.env.CTF_FLAG;
+  const targetLat = Number(process.env.CHALLENGE_TARGET_LAT);
+  const targetLng = Number(process.env.CHALLENGE_TARGET_LNG);
+  const radiusMeters = Number(process.env.CHALLENGE_RADIUS_METERS || "25");
+  const answer = process.env.CHALLENGE_ANSWER;
+  const successMessage = process.env.CHALLENGE_SUCCESS_MESSAGE;
 
   return {
     ok:
@@ -52,14 +57,15 @@ function getConfig() {
       targetLat <= 90 &&
       targetLng >= -180 &&
       targetLng <= 180 &&
-      Number.isFinite(successMeters) &&
-      successMeters > 0 &&
-      typeof flag === "string" &&
-      flag.length > 0,
+      Number.isFinite(radiusMeters) &&
+      radiusMeters > 0 &&
+      typeof answer === "string" &&
+      answer.length > 0,
     targetLat,
     targetLng,
-    successMeters,
-    flag
+    radiusMeters,
+    answer,
+    successMessage
   };
 }
 

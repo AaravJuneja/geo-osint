@@ -1,7 +1,10 @@
 async function start() {
   setupGuess();
 
-  const response = await fetch("/assets/panorama/config.json");
+  const configUrl = document.querySelector("#panorama").dataset.config || "/assets/panorama/config.json";
+  const previewUrl = configUrl.replace(/config\.json$/, "preview.jpg");
+
+  const response = await fetch(configUrl);
 
   if (!response.ok) {
     throw new Error("Failed to load panorama configuration");
@@ -10,7 +13,7 @@ async function start() {
   const { startYaw, startPitch, ...generatedConfig } = await response.json();
   pannellum.viewer("panorama", {
     ...generatedConfig,
-    preview: "/assets/panorama/preview.jpg",
+    preview: previewUrl,
     autoLoad: true,
     showControls: true,
     showZoomCtrl: true,
@@ -98,7 +101,7 @@ function setupGuess() {
 
       if (data.ok) {
         result.dataset.state = "success";
-        result.textContent = data.flag;
+        result.textContent = data.message;
       } else {
         result.dataset.state = "fail";
         result.textContent = data.message || "Incorrect.";
