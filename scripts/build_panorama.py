@@ -69,6 +69,36 @@ def download_tile(panoid: str, x: int, y: int) -> None:
     destination.write_bytes(data)
 
 
+def probe_tile_brightness(panoid: str, x: int, y: int) -> float:
+    request = urllib.request.Request(tile_url(panoid, x, y), headers=HEADERS)
+    with urllib.request.urlopen(request, timeout=30) as response:
+        data = response.read()
+    if len(data) <= 1000:
+        return 0.0
+    from PIL import Image as PILImage
+
+    with PILImage.open(__import__("io").BytesIO(data)) as tile:
+        gray = tile.convert("L")
+        histogram = gray.histogram()
+        total = sum(histogram)
+        if not total:
+            return 0.0
+        return sum(index * count for index, count in enumerate(histogram)) / total
+
+
+def check_full_coverage(panoid: str) -> None:
+    print("Probing panorama coverage...")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=16) as executor:
+        means = list(executor.map(lambda x: probe_tile_brightness(panoid, x, SOURCE_ROWS // 2), range(SOURCE_COLS)))
+    dark = [x for x, mean in enumerate(means) if mean < 3.0]
+    if dark:
+        raise SystemExit(
+            f"Panorama {panoid} has no imagery in {len(dark)}/{SOURCE_COLS} tile columns "
+            f"(x={dark[0]}..{dark[-1]}); it is a partial capture. Pick another panorama ID."
+        )
+    print("Full 360-degree coverage confirmed.")
+
+
 def download_tiles(panoid: str) -> None:
     coords = [(x, y) for y in range(SOURCE_ROWS) for x in range(SOURCE_COLS)]
     with concurrent.futures.ThreadPoolExecutor(max_workers=16) as executor:
@@ -90,6 +120,7 @@ def stitch_equirectangular(panoid: str) -> Image.Image:
 
 
 def load_equirectangular(panoid: str) -> Image.Image:
+    check_full_coverage(panoid)
     print("Downloading Street View source tiles...")
     download_tiles(panoid)
     print("Stitching 16K equirectangular panorama...")
