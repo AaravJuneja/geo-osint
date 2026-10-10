@@ -65,6 +65,16 @@ This template is set up for Vercel:
 
 For a plain static host that cannot run `api/guess.js`, the viewer still works but submissions won't be validated.
 
+## Challenge Builder UI
+
+Open the viewer and click **build challenge** (bottom-left) to use the built-in setup helper. Fill in the challenge details and it will generate:
+
+- The `python3 scripts/build_panorama.py ...` command with your selected yaw/pitch/output flags
+- A ready-to-copy `CHALLENGE_*` environment variable block
+- A short checklist for local validation and deployment
+
+The builder keeps sensitive values in your browser session only and does not send them to the backend.
+
 ## Local Preview
 
 ```bash
