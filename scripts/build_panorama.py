@@ -198,6 +198,7 @@ def save_fallback(face: Image.Image, face_letter: str, panorama_dir: Path) -> No
 
 
 def url_base(out_dir: Path) -> str:
+    out_dir = out_dir.resolve()
     if out_dir == PUBLIC_DIR or PUBLIC_DIR in out_dir.parents:
         return "/" + out_dir.relative_to(PUBLIC_DIR).as_posix()
     return out_dir.as_posix()
