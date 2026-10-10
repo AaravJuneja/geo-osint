@@ -77,7 +77,7 @@ async function start() {
         "Copy .env.example to .env if you have not done this yet.",
         "Run the build command above, then paste the panorama id when prompted.",
         "Add the environment variables above to local .env or your deployment host.",
-        "Run vercel dev for local validation and submit a test guess."
+        "Run bun run dev for local validation and submit a test guess."
       ];
 
       for (const step of steps) {

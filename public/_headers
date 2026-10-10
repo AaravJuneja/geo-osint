@@ -1,0 +1,25 @@
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Permissions-Policy: geolocation=(), camera=(), microphone=()
+  X-Robots-Tag: noindex, nofollow
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: blob: https://*.tile.openstreetmap.org; connect-src 'self' https://cdn.jsdelivr.net; font-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'
+
+/assets/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/assets/panorama/config.json
+  Cache-Control: public, max-age=0, must-revalidate
+
+/assets/panorama/preview.jpg
+  Cache-Control: public, max-age=3600, must-revalidate
+
+/assets/panorama/fallback/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/assets/panorama/*/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/api/*
+  Cache-Control: no-store
