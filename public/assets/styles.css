@@ -32,9 +32,23 @@ body {
   gap: 0.45rem;
 }
 
+.builder-panel {
+  position: fixed;
+  left: 0.75rem;
+  bottom: 0.75rem;
+  z-index: 10;
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
 .guess-toggle,
+.builder-toggle,
 .guess-box input,
-.guess-actions button {
+.guess-actions button,
+.builder-box input,
+.builder-actions button {
   border: 1px solid rgba(255, 255, 255, 0.25);
   background: rgba(0, 0, 0, 0.68);
   color: #fff;
@@ -43,7 +57,9 @@ body {
 }
 
 .guess-toggle,
-.guess-actions button {
+.builder-toggle,
+.guess-actions button,
+.builder-actions button {
   border-radius: 999px;
   padding: 0.55rem 0.8rem;
   cursor: pointer;
@@ -69,7 +85,51 @@ body {
   display: block;
 }
 
+.builder-box {
+  display: none;
+  width: min(30rem, calc(100vw - 1.5rem));
+  max-height: min(80vh, 40rem);
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 1rem;
+  background: rgba(0, 0, 0, 0.72);
+  padding: 0.75rem;
+}
+
+.builder-panel.is-open .builder-box {
+  display: block;
+}
+
 .guess-box label {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 0.7rem;
+  color: rgba(255, 255, 255, 0.78);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.builder-box h2,
+.builder-box h3 {
+  margin: 0 0 0.7rem;
+  color: #fff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  text-transform: lowercase;
+}
+
+.builder-box h2 {
+  font-size: 0.95rem;
+}
+
+.builder-box h3 {
+  margin-top: 1rem;
+  font-size: 0.82rem;
+}
+
+.builder-box label {
   display: grid;
   gap: 0.35rem;
   margin-bottom: 0.7rem;
@@ -97,7 +157,18 @@ body {
   outline: none;
 }
 
+.builder-box input {
+  width: 100%;
+  border-radius: 0.65rem;
+  padding: 0.7rem 0.75rem;
+  outline: none;
+}
+
 .guess-box input:focus {
+  border-color: rgba(255, 255, 255, 0.75);
+}
+
+.builder-box input:focus {
   border-color: rgba(255, 255, 255, 0.75);
 }
 
@@ -107,12 +178,60 @@ body {
   gap: 0.7rem;
 }
 
+.builder-actions {
+  display: flex;
+  align-items: center;
+  margin-top: 0.2rem;
+}
+
+.builder-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.builder-output pre {
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0.75rem;
+  background: rgba(0, 0, 0, 0.5);
+  color: rgba(255, 255, 255, 0.95);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+#builderChecklistOutput {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+#builderResult {
+  margin: 0.75rem 0 0;
+  color: #b9ffcf;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
 #guessResult {
   color: #fff;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
   font-size: 0.95rem;
   font-weight: 800;
   word-break: break-word;
+}
+
+@media (max-width: 768px) {
+  .builder-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 #guessResult[data-state="fail"] {

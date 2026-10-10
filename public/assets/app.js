@@ -1,5 +1,6 @@
 async function start() {
   setupGuess();
+  setupBuilder();
 
   const configUrl = document.querySelector("#panorama").dataset.config || "/assets/panorama/config.json";
   const previewUrl = configUrl.replace(/config\.json$/, "preview.jpg");
@@ -8,6 +9,101 @@ async function start() {
 
   if (!response.ok) {
     throw new Error("Failed to load panorama configuration");
+  }
+
+  function setupBuilder() {
+    const panel = document.querySelector("#builderPanel");
+    const toggle = document.querySelector("#builderToggle");
+    const form = document.querySelector("#builderForm");
+    const commandOutput = document.querySelector("#builderCommandOutput");
+    const envOutput = document.querySelector("#builderEnvOutput");
+    const checklistOutput = document.querySelector("#builderChecklistOutput");
+    const result = document.querySelector("#builderResult");
+
+    toggle.addEventListener("click", () => {
+      panel.classList.toggle("is-open");
+      result.textContent = "";
+    });
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const formData = new FormData(form);
+      const panoId = cleanText(formData.get("panoId"));
+      const outputDir = cleanText(formData.get("outputDir")) || "public/assets/panorama";
+      const answer = cleanText(formData.get("answer"));
+      const successMessage = cleanText(formData.get("successMessage"));
+      const yaw = Number(formData.get("startYaw"));
+      const pitch = Number(formData.get("startPitch"));
+      const targetLat = Number(formData.get("targetLat"));
+      const targetLng = Number(formData.get("targetLng"));
+      const radius = Number(formData.get("radius"));
+
+      const invalidCoords =
+        !Number.isFinite(targetLat) ||
+        !Number.isFinite(targetLng) ||
+        targetLat < -90 ||
+        targetLat > 90 ||
+        targetLng < -180 ||
+        targetLng > 180;
+
+      if (!panoId || !answer || invalidCoords || !Number.isFinite(radius) || radius <= 0) {
+        result.textContent = "Fill all required fields with valid values.";
+        return;
+      }
+
+      const commandParts = ["python3 scripts/build_panorama.py"];
+      commandParts.push(`--yaw ${Number.isFinite(yaw) ? yaw : 0}`);
+      commandParts.push(`--pitch ${Number.isFinite(pitch) ? pitch : 0}`);
+      commandParts.push(`--out ${shellQuote(outputDir)}`);
+
+      commandOutput.textContent = `${commandParts.join(" ")}\n# then paste panorama id when prompted`;
+
+      const envLines = [
+        `CHALLENGE_TARGET_LAT=${targetLat}`,
+        `CHALLENGE_TARGET_LNG=${targetLng}`,
+        `CHALLENGE_ANSWER=${envQuote(answer)}`,
+        `CHALLENGE_RADIUS_METERS=${Math.round(radius)}`
+      ];
+
+      if (successMessage) {
+        envLines.push(`CHALLENGE_SUCCESS_MESSAGE=${envQuote(successMessage)}`);
+      }
+
+      envOutput.textContent = envLines.join("\n");
+
+      checklistOutput.innerHTML = "";
+      const steps = [
+        "Copy .env.example to .env if you have not done this yet.",
+        "Run the build command above, then paste the panorama id when prompted.",
+        "Add the environment variables above to local .env or your deployment host.",
+        "Run vercel dev for local validation and submit a test guess."
+      ];
+
+      for (const step of steps) {
+        const li = document.createElement("li");
+        li.textContent = step;
+        checklistOutput.append(li);
+      }
+
+      result.textContent = `Setup generated for panoid ${panoId}.`;
+    });
+  }
+
+  function cleanText(value) {
+    return String(value || "").trim();
+  }
+
+  function shellQuote(value) {
+    return `'${String(value).replaceAll("'", "'\"'\"'")}'`;
+  }
+
+  function envQuote(value) {
+    const text = String(value);
+    if (!/[^\w./:@-]/.test(text)) {
+      return text;
+    }
+    return JSON.stringify(text);
   }
 
   const { startYaw, startPitch, ...generatedConfig } = await response.json();

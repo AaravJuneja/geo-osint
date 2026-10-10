@@ -34,6 +34,66 @@
         </div>
       </form>
     </section>
+    <section class="builder-panel" id="builderPanel">
+      <button class="builder-toggle" id="builderToggle" type="button">build challenge</button>
+      <form class="builder-box" id="builderForm" autocomplete="off">
+        <h2>challenge builder</h2>
+        <label>
+          <span>panorama id</span>
+          <input id="panoIdInput" name="panoId" type="text" required />
+        </label>
+        <div class="builder-grid">
+          <label>
+            <span>start yaw</span>
+            <input id="startYawInput" name="startYaw" type="number" inputmode="decimal" step="any" value="0" />
+          </label>
+          <label>
+            <span>start pitch</span>
+            <input id="startPitchInput" name="startPitch" type="number" inputmode="decimal" step="any" value="0" />
+          </label>
+        </div>
+        <label>
+          <span>output directory</span>
+          <input id="outputDirInput" name="outputDir" type="text" value="public/assets/panorama" />
+        </label>
+        <div class="builder-grid">
+          <label>
+            <span>target latitude</span>
+            <input id="targetLatInput" name="targetLat" type="number" inputmode="decimal" step="any" min="-90" max="90" required />
+          </label>
+          <label>
+            <span>target longitude</span>
+            <input id="targetLngInput" name="targetLng" type="number" inputmode="decimal" step="any" min="-180" max="180" required />
+          </label>
+        </div>
+        <div class="builder-grid">
+          <label>
+            <span>radius (meters)</span>
+            <input id="radiusInput" name="radius" type="number" inputmode="numeric" step="1" min="1" value="25" required />
+          </label>
+          <label>
+            <span>success message (optional)</span>
+            <input id="successMessageInput" name="successMessage" type="text" />
+          </label>
+        </div>
+        <label>
+          <span>answer / flag</span>
+          <input id="answerInput" name="answer" type="text" required />
+        </label>
+        <div class="builder-actions">
+          <button id="generateChallengeConfig" type="submit">generate setup</button>
+        </div>
+        <div class="builder-output">
+          <h3>1) build assets</h3>
+          <pre id="builderCommandOutput" aria-live="polite"></pre>
+          <h3>2) set environment</h3>
+          <pre id="builderEnvOutput"></pre>
+          <h3>3) next steps</h3>
+          <ul id="builderChecklistOutput"></ul>
+          <p id="builderResult" aria-live="polite"></p>
+        </div>
+      </form>
+    </section>
 
     <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.7/build/pannellum.js"></script>
     <script src="/assets/app.js" type="module"></script>
