@@ -1,3 +1,6 @@
+const MAX_BODY_BYTES = 4096;
+const JSON_CONTENT_TYPE = /^\s*application\/json(?:;|$)/i;
+
 export default async function handler(req, res) {
   setNoStore(res);
 
@@ -46,8 +49,9 @@ function getConfig() {
   const targetLat = Number(process.env.CHALLENGE_TARGET_LAT);
   const targetLng = Number(process.env.CHALLENGE_TARGET_LNG);
   const radiusMeters = Number(process.env.CHALLENGE_RADIUS_METERS || "25");
-  const answer = process.env.CHALLENGE_ANSWER;
-  const successMessage = process.env.CHALLENGE_SUCCESS_MESSAGE;
+  const answer = typeof process.env.CHALLENGE_ANSWER === "string" ? process.env.CHALLENGE_ANSWER.trim() : "";
+  const successMessage =
+    typeof process.env.CHALLENGE_SUCCESS_MESSAGE === "string" ? process.env.CHALLENGE_SUCCESS_MESSAGE.trim() : "";
 
   return {
     ok:
@@ -70,23 +74,36 @@ function getConfig() {
 }
 
 async function readJsonBody(req) {
-  if (req.body && typeof req.body === "object") {
+  if (req.body && typeof req.body === "object" && !Array.isArray(req.body)) {
     return req.body;
   }
 
   if (typeof req.body === "string") {
-    return JSON.parse(req.body || "{}");
+    return parseJsonObject(req.body);
+  }
+
+  const contentType = req.headers?.["content-type"];
+  if (typeof contentType === "string" && contentType.length > 0 && !JSON_CONTENT_TYPE.test(contentType)) {
+    throw new Error("Unsupported content type");
   }
 
   let raw = "";
   for await (const chunk of req) {
-    raw += chunk;
-    if (Buffer.byteLength(raw) > 4096) {
+    raw += chunk.toString("utf8");
+    if (Buffer.byteLength(raw, "utf8") > MAX_BODY_BYTES) {
       throw new Error("Payload too large");
     }
   }
 
-  return raw ? JSON.parse(raw) : {};
+  return parseJsonObject(raw);
+}
+
+function parseJsonObject(raw) {
+  const payload = raw ? JSON.parse(raw) : {};
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    throw new Error("Invalid JSON payload");
+  }
+  return payload;
 }
 
 function distanceMeters(lat, lng, targetLat, targetLng) {
@@ -109,6 +126,7 @@ function setNoStore(res) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Robots-Tag", "noindex, nofollow");
+  res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
 }
 
 function sendJson(res, statusCode, payload) {
