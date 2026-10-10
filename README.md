@@ -20,7 +20,11 @@ Open Google Maps (or Google Street View) on a place you like and copy the panora
 
 ### 2. Generate the panorama assets
 
-Requirements: Python 3, `numpy`, `Pillow`.
+Requirements: Python 3 and the pinned build dependencies in `requirements.txt`.
+
+```bash
+python3 -m pip install -r requirements.txt
+```
 
 ```bash
 python3 scripts/build_panorama.py
