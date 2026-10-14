@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "echo 'No build step required for static site'",
-    "dev": "bunx wrangler pages dev public",
-    "deploy": "bunx wrangler pages deploy public"
+    "dev": "bunx wrangler dev",
+    "deploy": "bunx wrangler deploy"
   },
   "keywords": [],
   "author": "",
